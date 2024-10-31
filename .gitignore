@@ -1,0 +1,5 @@
+# Exclude JSON files
+*.json
+
+# Exclude CSV files
+*.csv
