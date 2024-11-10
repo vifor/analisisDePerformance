@@ -1,4 +1,4 @@
-CREATE TABLE `languages` (
+CREATE TABLE IF NOT EXISTS `languages` (
   `repo_name` char(80) DEFAULT NULL,
   `language_name` char(20) DEFAULT NULL,
   `language_bytes` int DEFAULT NULL

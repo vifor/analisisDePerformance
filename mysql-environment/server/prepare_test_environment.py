@@ -1,20 +1,33 @@
 import mysql.connector
 import os
+import time
 
 # Retrieve database configuration from environment variables
-host = os.getenv('MYSQL_HOST', 'localhost')
-user = os.getenv('MYSQL_USER', 'root')
-password = os.getenv('MYSQL_PASSWORD', '')
-database = os.getenv('MYSQL_DATABASE', '')
+host = os.getenv('MYSQL_HOST', 'mysql')
+user = os.getenv('MYSQL_USER', 'test_user')
+password = os.getenv('MYSQL_PASSWORD', 'test_password')
+database = os.getenv('MYSQL_DATABASE', 'test_db')
 
-# Database connection setup
-conn = mysql.connector.connect(
-    host=host,
-    user=user,
-    password=password,
-    database=database
-)
-cursor = conn.cursor()
+# Retry logic to wait for MySQL server to be ready
+max_retries = 10
+retry_delay = 5  # seconds
+
+for attempt in range(max_retries):
+    try:
+        # Database connection setup
+        conn = mysql.connector.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=database
+        )
+        cursor = conn.cursor()
+        break
+    except mysql.connector.Error as err:
+        print(f"Attempt {attempt + 1} of {max_retries} failed: {err}")
+        time.sleep(retry_delay)
+else:
+    raise Exception("Could not connect to MySQL server after several attempts")
 
 # Path to the SQL file
 sql_file_path = 'create_test_table.sql'

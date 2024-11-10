@@ -12,4 +12,4 @@ COPY . /app
 # Install any needed packages specified in requirements.txt
 RUN pip install  mysql-connector-python  --upgrade
 
-CMD ["echo", "Hello world"]
+CMD ["python", "prepare_test_environment.py"]
