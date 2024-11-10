@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mysql:
+    build: .
+    container_name: mysql_container
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+    ports:
+      - "3306:3306"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'  # Adjust the CPU limit as needed
+          memory: 1g
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
