@@ -1,4 +1,4 @@
-# Trabajo Practico Topicos 2
+# Trabajo Practico BD
 
 ## Autores
 
