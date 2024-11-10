@@ -7,10 +7,9 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Copy the .env file from one level above the current directory into the container
-COPY ../.env /app/.env
+
 
 # Install any needed packages specified in requirements.txt
 RUN pip install  mysql-connector-python  --upgrade
 
-CMD ["python", "prepare_test_environment.py"]
+CMD ["echo", "Hello world"]
