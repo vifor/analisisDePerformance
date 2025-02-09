@@ -1,0 +1,27 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password       # Contraseña del usuario root
+      MYSQL_USER: test_user                    # Nombre del usuario regular
+      MYSQL_PASSWORD: test_password            # Contraseña del usuario regular
+      MYSQL_DATABASE: test_db
+    ports:
+      - "3306:3306"
+    command: ["mysqld", "--init-file=/docker-entrypoint-initdb.d/init.sql"]
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"    # Máximo un núcleo completo de CPU
+          memory: "1G"   # Límite de 1 GB de RAM
+    volumes:
+      - ./app:/app 
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Mount the script
+      
+volumes:
+  mysql_data:
+
+
