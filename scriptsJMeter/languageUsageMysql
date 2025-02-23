@@ -1,0 +1,113 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.io.StringWriter; // For exception handling
+import java.io.PrintWriter; // For exception handling
+import java.util.Random;
+
+// --- Detalles de conexión a la BD ---
+// a configurar en JDBC Connection Configuration , 
+// sino completar las siguientes líneas con los datos de conexión
+/*
+String jdbcUrl = "jdbc:mysql://localhost:3306/tp_bd_500"; // 
+String username = "username";  
+String password = "password";  
+ */
+
+def validLanguages = ["C", "M4", "Makefile", "Shell", "C++", "CSS", "D", "Java", "JavaScript", "Objective-C", "Python", "HTML", "Roff", "Lua", "SQF", "Perl", "CMake", "FORTRAN", "Harbour"];
+
+
+Connection connection = null;
+PreparedStatement preparedStatement = null;
+ResultSet resultSet = null;
+SampleResult.sampleStart();
+
+try {
+    Class.forName("com.mysql.cj.jdbc.Driver"); 
+    connection = DriverManager.getConnection(jdbcUrl, username, password);
+
+    
+    Random random = new Random();
+    String randomLanguage = validLanguages[random.nextInt(validLanguages.size())];
+
+        String countSql = """
+        SELECT COUNT(DISTINCT r.id) AS repo_count
+        FROM languages l
+        JOIN repos r ON l.repo_id = r.id
+        WHERE l.language_name = ?
+    """;
+    preparedStatement = connection.prepareStatement(countSql);
+    preparedStatement.setString(1, randomLanguage);
+    resultSet = preparedStatement.executeQuery();
+
+    long repoCount = 0;
+    if (resultSet.next()) {
+        repoCount = resultSet.getLong("repo_count");
+    }
+    resultSet.close();
+    preparedStatement.close();
+
+    // --- Prepare and execute the query to get the total repo count ---
+    String totalCountSql = "SELECT COUNT(*) AS total_repos FROM repos";
+    preparedStatement = connection.prepareStatement(totalCountSql);
+    resultSet = preparedStatement.executeQuery();
+
+    long totalRepoCount = 0;
+    if (resultSet.next()) {
+        totalRepoCount = resultSet.getLong("total_repos");
+    }
+
+       double percentage = (totalRepoCount > 0) ? ((double) repoCount / totalRepoCount) * 100 : 0.0;
+
+    String output = String.format("%s, %d, %.2f", randomLanguage, repoCount, percentage);
+
+    SampleResult.setResponseData(output, "UTF-8");
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setSuccessful(true);
+    SampleResult.setResponseCodeOK();
+    log.info("Info del lenguaje: " + output);
+
+
+} catch (ClassNotFoundException e) {
+    SampleResult.setSuccessful(false);
+    SampleResult.setResponseCode("500");
+    SampleResult.setResponseMessage("JDBC Driver not found: " + e.getMessage());
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    e.printStackTrace(pw);
+    SampleResult.setResponseData("Driver Exception: " + e.getMessage() + "\n" + sw.toString(), "UTF-8");
+    log.error("JDBC Driver not found", e);
+} catch (SQLException e) {
+    SampleResult.setSuccessful(false);
+    SampleResult.setResponseCode("500");
+    SampleResult.setResponseMessage("SQL Error: " + e.getMessage());
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    e.printStackTrace(pw);
+    SampleResult.setResponseData("SQL Exception: " + e.getMessage() + "\n" + sw.toString(), "UTF-8");
+    log.error("SQL Error", e);
+} finally {
+    try {
+        if (resultSet != null) {
+            resultSet.close();
+        }
+        if (preparedStatement != null) {
+            preparedStatement.close();
+        }
+        if (connection != null) {
+            connection.close(); 
+        }
+    } catch (SQLException e) {
+        SampleResult.setSuccessful(false); 
+        SampleResult.setResponseCode("500"); 
+        SampleResult.setResponseMessage("Error closing resources: " + e.getMessage());
+          StringWriter sw = new StringWriter();
+          PrintWriter pw = new PrintWriter(sw);
+          e.printStackTrace(pw);
+          SampleResult.setResponseData("Close resources Exception: " + e.getMessage() + "\n" + sw.toString(), "UTF-8");
+        log.error("Error closing resources", e); 
+    }
+    SampleResult.sampleEnd();
+}
