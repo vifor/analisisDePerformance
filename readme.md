@@ -12,3 +12,5 @@ Se limita la RAM y la CPU para equiparar las pruebas
 ## JMeter
 Las pruebas se realizaron utilizando JMeter, guardándose una copia de los scripts aplicados para cada escenario en /scriptsJMeter
 Previa la ejecución es necesario configurar los detalles de conexión a la BD en JDBC Connection Configuration 
+
+
