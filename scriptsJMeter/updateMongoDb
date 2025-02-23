@@ -1,0 +1,55 @@
+import com.mongodb.client.MongoClients
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoDatabase
+import org.bson.Document
+import java.util.Random
+
+
+
+try {
+    def mongoClient = MongoClients.create(connectionString)
+    def database = mongoClient.getDatabase(databaseName)
+    def collection = database.getCollection("commits")
+
+    Random random = new Random()
+    int randomIndex = random.nextInt(500000)
+
+    def pipeline = [
+        new Document('$skip', randomIndex),
+        new Document('$limit', 1)
+    ]
+    def randomDocument = collection.aggregate(pipeline).first()
+
+    if (randomDocument != null) {
+        def originalMessage = randomDocument.getString("message")
+        def updatedMessage = "*" + originalMessage
+
+        def filter = new Document("_id", randomDocument.getInteger("_id"))
+        def update = new Document('$set', new Document("message", updatedMessage))
+        def result = collection.updateOne(filter, update)
+
+        if (result.getModifiedCount() > 0) {
+            SampleResult.setSuccessful(true)
+            SampleResult.setResponseCodeOK()
+            SampleResult.setResponseMessage("Document updated (ID: " + randomDocument.getInteger("_id") + ").")
+            SampleResult.setResponseData("Original Message: " + originalMessage + "\nUpdated Message: " + updatedMessage, "UTF-8")
+        } else {
+            SampleResult.setSuccessful(false)
+            SampleResult.setResponseCode("500")
+            SampleResult.setResponseMessage("No document found with matching _id: " + randomDocument.getInteger("_id"))
+        }
+    } else {
+          SampleResult.setSuccessful(false)
+          SampleResult.setResponseCode("500")  // Internal Server Error
+          SampleResult.setResponseMessage("Failed to retrieve a random document.")
+          SampleResult.setResponseData("No document found at index: " + randomIndex, "UTF-8")
+    }
+
+    mongoClient.close()
+
+} catch (Exception e) {
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseCode("500")
+    SampleResult.setResponseMessage("Error: " + e.getMessage())
+    log.error("Error in MongoDB script", e)
+}
