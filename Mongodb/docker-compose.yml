@@ -1,0 +1,19 @@
+version: "3.9"  
+
+services:
+  mongodb:
+    image: mongo:8.0.0 # MongoDB image version 8.0.0
+    container_name: mongodb-performance-tests # Give your container a name
+    ports:
+      - "27017:27017" # Maps host port 27017 to container port 27017
+    volumes:
+      - mongodb_data:/data/db # Persists data even if the container is removed
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0" # Limits to 1 CPU core
+          memory: "2G" # Limits to 2 Gigabytes of RAM
+
+volumes:
+  mongodb_data: # Named volume for MongoDB data persistence
+
