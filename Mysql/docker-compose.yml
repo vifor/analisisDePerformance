@@ -15,7 +15,7 @@ services:
       resources:
         limits:
           cpus: "1.0"    # Máximo un núcleo completo de CPU
-          memory: "1G"   # Límite de 1 GB de RAM
+          memory: "2G"   # Límite de 1 GB de RAM
     volumes:
       - ./app:/app 
       - mysql_data:/var/lib/mysql
