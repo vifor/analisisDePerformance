@@ -1,0 +1,45 @@
+import com.mongodb.client.MongoClients
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoDatabase
+import com.mongodb.client.model.Filters
+import org.bson.Document
+
+
+// --- Detalles de conexión a la BD ---
+// a configurar en JDBC Connection Configuration , 
+// sino completar las siguientes líneas con los datos de conexión
+/*
+def connectionString = "mongodb://localhost:27017"
+def databaseName = "tp_bd_5000" 
+def collectionName = "commits"  
+ */
+
+
+
+try {
+   def mongoClient = MongoClients.create(connectionString)
+   def database = mongoClient.getDatabase(databaseName)
+   def collection = database.getCollection(collectionName)
+
+
+   long count = collection.countDocuments() 
+
+
+   log.info("Number of documents in '$collectionName': $count") 
+   SampleResult.setResponseData(String.valueOf(count), "UTF-8")  
+   SampleResult.setDataType(SampleResult.TEXT) 
+   SampleResult.setSuccessful(true) 
+   SampleResult.setResponseCodeOK() 
+   SampleResult.setResponseMessageOK()
+
+
+   mongoClient.close()
+
+} catch (Exception e) {
+   log.error("Error connecting to MongoDB or counting documents: ", e)
+   SampleResult.setSuccessful(false)
+   SampleResult.setResponseCode("500")  // Or another appropriate error code
+   SampleResult.setResponseMessage(e.getMessage())
+   SampleResult.setResponseData(e.getMessage(), "UTF-8");
+
+}
