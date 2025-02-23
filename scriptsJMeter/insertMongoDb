@@ -1,0 +1,46 @@
+import com.mongodb.client.MongoClients
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoDatabase
+import org.bson.Document
+
+// --- Connection Details ---
+def connectionString = "mongodb://localhost:27017"
+def databaseName = "tp_bd_5000"
+
+// --- MongoDB Connection ---
+try {
+    def mongoClient = MongoClients.create(connectionString)
+    def database = mongoClient.getDatabase(databaseName)
+    def collection = database.getCollection("commits")
+
+
+    def newCommit = new Document()
+    newCommit.append("subject", "test subject")
+    newCommit.append("message", "test message with several descriptive words")
+
+    collection.insertOne(newCommit)
+
+    def insertedId = newCommit.get("_id")
+
+    if (insertedId != null) {
+        SampleResult.setSuccessful(true)
+        SampleResult.setResponseCodeOK()
+        SampleResult.setResponseMessage("User inserted successfully.  ID: " + insertedId)
+        SampleResult.setResponseData("Inserted Document: " + newUser.toJson(), "UTF-8")
+    } else {
+        // This should *never* happen with insertOne() unless there's a very low-level error,
+        // but it's good to have a check.
+        SampleResult.setSuccessful(false)
+        SampleResult.setResponseCode("500")
+        SampleResult.setResponseMessage("Failed to insert user.  No ID returned.")
+    }
+
+    mongoClient.close()
+
+} catch (Exception e) {
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseCode("500") // Or another appropriate error code
+    SampleResult.setResponseMessage("Error connecting to MongoDB or inserting user: " + e.getMessage())
+    SampleResult.setResponseData(e.getStackTraceAsString(), "UTF-8")  //Include full stack trace in response data
+    log.error("Error in MongoDB script", e) // Log the error
+}
