@@ -1,8 +1,12 @@
-import com.mongodb.client.MongoClients
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoDatabase
-import com.mongodb.client.model.Filters
-import org.bson.Document
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
+import com.mongodb.client.model.Filters;
+import java.util.Random;
+import java.util.ArrayList;
+import org.apache.jmeter.samplers.SampleResult;
 
 
 // --- Detalles de conexión a la BD ---
@@ -14,32 +18,48 @@ def databaseName = "tp_bd_5000"
 def collectionName = "commits"  
  */
 
-
+def validLanguages = ["C", "M4", "Makefile", "Shell", "C++", "CSS", "D", "Java", "JavaScript", "Objective-C", "Python", "HTML", "Roff", "Lua", "SQF", "Perl", "CMake", "FORTRAN", "Harbour"];
+MongoClient mongoClient = null;
+SampleResult result = new SampleResult();
+result.sampleStart();
 
 try {
-   def mongoClient = MongoClients.create(connectionString)
-   def database = mongoClient.getDatabase(databaseName)
-   def collection = database.getCollection(collectionName)
+    // --- Connect to MongoDB ---
+    mongoClient = MongoClients.create(connectionString);
+    MongoDatabase database = mongoClient.getDatabase(databaseName);
+    MongoCollection<Document> reposCollection = database.getCollection(collectionName);
 
+    // --- Choose a random language from the VALID list ---
+    Random random = new Random();
+    String randomLanguage = validLanguages[random.nextInt(validLanguages.size())]; // Safe, because validLanguages is not empty
 
-   long count = collection.countDocuments() 
+    // Calculate repo count for the chosen language (USE elemMatch!)
+    long repoCount = reposCollection.countDocuments(Filters.elemMatch("languages", Filters.eq("name", randomLanguage)));
 
+    // Calculate total repo count
+    long totalRepoCount = reposCollection.countDocuments();
 
-   log.info("Number of documents in '$collectionName': $count") 
-   SampleResult.setResponseData(String.valueOf(count), "UTF-8")  
-   SampleResult.setDataType(SampleResult.TEXT) 
-   SampleResult.setSuccessful(true) 
-   SampleResult.setResponseCodeOK() 
-   SampleResult.setResponseMessageOK()
+    // Calculate percentage (avoid division by zero)
+    double percentage = (totalRepoCount > 0) ? ((double) repoCount / totalRepoCount) * 100 : 0.0;
 
+    // Format the output
+    String output = String.format("%s, %d, %.2f", randomLanguage, repoCount, percentage);
 
-   mongoClient.close()
+    // --- Set the response data ---
+    result.setResponseData(output, "UTF-8");
+    result.setDataType(SampleResult.TEXT);
+    result.setSuccessful(true);
+
+    log.info("Language Information: " + output);
 
 } catch (Exception e) {
-   log.error("Error connecting to MongoDB or counting documents: ", e)
-   SampleResult.setSuccessful(false)
-   SampleResult.setResponseCode("500")  // Or another appropriate error code
-   SampleResult.setResponseMessage(e.getMessage())
-   SampleResult.setResponseData(e.getMessage(), "UTF-8");
-
+    log.error("Error: ", e);
+    result.setResponseData("Error: " + e.getMessage(), "UTF-8");
+    result.setDataType(SampleResult.TEXT);
+    result.setSuccessful(false);
+} finally {
+    if (mongoClient != null) {
+        mongoClient.close();
+    }
+    result.sampleEnd();
 }
