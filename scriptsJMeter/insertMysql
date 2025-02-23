@@ -1,0 +1,63 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+
+Connection connection = null;
+PreparedStatement preparedStatement = null;
+
+try {
+    Class.forName("com.mysql.cj.jdbc.Driver");
+
+    connection = DriverManager.getConnection(jdbcUrl, username, password);
+
+    String sql = "INSERT INTO " + tableName + " (subject, message) VALUES (?, ?)";
+    preparedStatement = connection.prepareStatement(sql);
+
+    preparedStatement.setString(1, "test subject");  // Set the subject
+    preparedStatement.setString(2, "test message with several descriptive words"); // Set the message
+
+    int rowsAffected = preparedStatement.executeUpdate();
+
+    if (rowsAffected > 0) {
+        SampleResult.setSuccessful(true);
+        SampleResult.setResponseCodeOK();
+        SampleResult.setResponseMessage("Commit inserted successfully.");
+        SampleResult.setResponseData("Inserted commit", "UTF-8"); // Simplified response
+    } else {
+   
+        SampleResult.setSuccessful(false);
+        SampleResult.setResponseCode("500");
+        SampleResult.setResponseMessage("Failed to insert commit.");
+    }
+
+} catch (ClassNotFoundException e) {
+    SampleResult.setSuccessful(false);
+    SampleResult.setResponseCode("500");
+    SampleResult.setResponseMessage("MySQL JDBC Driver not found: " + e.getMessage());
+    SampleResult.setResponseData(e.getStackTraceAsString(), "UTF-8");
+    log.error("MySQL Driver not found", e);
+} catch (SQLException e) {
+    SampleResult.setSuccessful(false);
+    SampleResult.setResponseCode("500");
+    SampleResult.setResponseMessage("SQL Error: " + e.getMessage());
+    SampleResult.setResponseData(e.getStackTraceAsString(), "UTF-8");
+    log.error("SQL Error", e);
+} finally {
+
+    try {
+        if (preparedStatement != null) {
+            preparedStatement.close();
+        }
+        if (connection != null) {
+            connection.close();
+        }
+    } catch (SQLException e) {
+        SampleResult.setSuccessful(false);
+        SampleResult.setResponseCode("500");
+        SampleResult.setResponseMessage("Error closing resources: " + e.getMessage());
+        SampleResult.setResponseData(e.getStackTraceAsString(), "UTF-8");
+        log.error("Error closing resources", e);
+    }
+}
