@@ -1,0 +1,81 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.io.StringWriter;
+import java.io.PrintWriter;
+
+
+Connection connection = null;
+PreparedStatement preparedStatement = null;
+ResultSet resultSet = null;
+
+SampleResult.sampleStart(); 
+
+try {
+    Class.forName("com.mysql.cj.jdbc.Driver");
+
+    connection = DriverManager.getConnection(jdbcUrl, username, password);
+
+    String sql = "SELECT COUNT(*) AS commit_count FROM commits";
+    preparedStatement = connection.prepareStatement(sql);
+
+    resultSet = preparedStatement.executeQuery();
+
+    long commitCount = 0;
+    if (resultSet.next()) {
+        commitCount = resultSet.getLong("commit_count");
+    }
+
+
+    SampleResult.setResponseData("Commit Count: " + commitCount, "UTF-8");
+    SampleResult.setDataType(SampleResult.TEXT);
+    SampleResult.setSuccessful(true);
+    SampleResult.setResponseCodeOK();
+    log.info("Commit Count: " + commitCount);
+
+
+} catch (ClassNotFoundException e) {
+    SampleResult.setSuccessful(false);
+    SampleResult.setResponseCode("500");
+    SampleResult.setResponseMessage("JDBC Driver not found: " + e.getMessage());
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    e.printStackTrace(pw);
+    SampleResult.setResponseData("Driver Exception: " + e.getMessage() + "\n" + sw.toString(), "UTF-8");
+    log.error("JDBC Driver not found", e);
+
+} catch (SQLException e) {
+    SampleResult.setSuccessful(false);
+    SampleResult.setResponseCode("500");
+    SampleResult.setResponseMessage("SQL Error: " + e.getMessage());
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    e.printStackTrace(pw);
+    SampleResult.setResponseData("SQL Exception: " + e.getMessage() + "\n" + sw.toString(), "UTF-8");
+    log.error("SQL Error", e);
+
+} finally {
+
+    try {
+        if (resultSet != null) {
+            resultSet.close();
+        }
+        if (preparedStatement != null) {
+            preparedStatement.close();
+        }
+        if (connection != null) {
+            connection.close();
+        }
+    } catch (SQLException e) {
+        
+        log.error("Error closing resources", e);
+        StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      e.printStackTrace(pw);
+      SampleResult.setResponseData("SQL Exception: " + e.getMessage() + "\n" + sw.toString(), "UTF-8");
+
+    }
+    SampleResult.sampleEnd(); 
+}
